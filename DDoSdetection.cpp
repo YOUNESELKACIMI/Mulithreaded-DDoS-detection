@@ -76,7 +76,7 @@ void processLine(const std::string& line, std::unordered_map<std::string, Traffi
     std::string sourceIP = fields[11];
     std::string destIP = fields[12];
 
-
+    // Parse source and destination ports and packet count
     int sourcePort = 0;
     int destPort = 0;
     int packetCount = 0;
@@ -100,21 +100,21 @@ void processLine(const std::string& line, std::unordered_map<std::string, Traffi
         return;
     }
 
-
+    // Determine attack type based on destination IP, destination port, and flags
     std::string attackType = determineAttackType(destIP, destPort, packetCount);
 
-
+    // Update traffic data
     std::lock_guard<std::mutex> lock(mutex);
     trafficMap[sourceIP].packetCount += packetCount;
     trafficMap[sourceIP].timestamp = std::chrono::system_clock::now();
     trafficMap[sourceIP].destIP = destIP;
     trafficMap[sourceIP].destPort = destPort;
 
-
+    // Check if the source IP has exceeded the threshold and if it's a new attack
     if (trafficMap[sourceIP].packetCount > THRESHOLD && detectedIPs.count(sourceIP) == 0) {
         detectedIPs.insert(sourceIP);
 
-
+        // Create attack information
         AttackInfo attackInfo;
         attackInfo.packetCount = trafficMap[sourceIP].packetCount;
         attackInfo.destIP = trafficMap[sourceIP].destIP;
@@ -134,7 +134,7 @@ void processLine(const std::string& line, std::unordered_map<std::string, Traffi
         }
     }
 
-
+    // Remove stale traffic data
     auto currentTime = std::chrono::system_clock::now();
     for (auto it = trafficMap.begin(); it != trafficMap.end();) {
         if (std::chrono::duration_cast<std::chrono::seconds>(currentTime - it->second.timestamp).count() > TIME_WINDOW) {
