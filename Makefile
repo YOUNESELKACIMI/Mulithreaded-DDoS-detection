@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -pthread -lpcap
+CXXFLAGS = -pthread
 
 
 
